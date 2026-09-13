@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Baby Weight Tracker</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2A2D5C">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Baby Weight">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{box-sizing:border-box}
+:root{
+  --bg:#F6F4FC;
+  --surface:#FFFFFF;
+  --surface-2:#F3F1FB;
+  --ink:#262A4D;
+  --ink-soft:#767B9E;
+  --line:#EAE7F7;
+  --coral:#FF6B81;
+  --coral-dark:#E64F68;
+  --coral-soft:#FFE3E8;
+  --mint:#1FBFA3;
+  --mint-dark:#149C86;
+  --mint-soft:#DAF6F1;
+  --butter:#FFB648;
+  --butter-soft:#FFEED1;
+  --sky:#4EA1E8;
+  --sky-soft:#E4F1FD;
+  --danger:#E63950;
+  --danger-soft:#FFE1E7;
+  --shadow:0 10px 30px -14px rgba(38,42,77,.18);
+}
+body{margin:0;font-family:'IBM Plex Sans Thai',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--ink)}
+h1,h2,.stat b,.hero-badge-value,button,summary{font-family:'Kanit',system-ui,sans-serif}
+.container{max-width:1050px;margin:auto;padding:22px 18px 60px}
+.hero{position:relative;overflow:hidden;border-radius:24px;padding:28px 26px;margin-bottom:18px;
+  background:linear-gradient(135deg,#2A2D5C 0%,#3B3178 55%,#4A2E6E 100%);color:#fff;box-shadow:var(--shadow)}
+.hero-blob{position:absolute;border-radius:50%;filter:blur(46px);opacity:.55;pointer-events:none}
+.hero-blob.b1{width:260px;height:260px;background:var(--coral);top:-90px;right:-60px}
+.hero-blob.b2{width:220px;height:220px;background:var(--mint);bottom:-110px;left:-50px}
+.hero-content{position:relative;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.hero-icon-wrap{position:relative;flex-shrink:0}
+.hero-icon{width:88px;height:88px;border-radius:50%;background:rgba(255,255,255,.15);display:flex;align-items:center;
+  justify-content:center;font-size:38px;backdrop-filter:blur(6px);overflow:hidden;cursor:pointer;
+  border:2px solid rgba(255,255,255,.35)}
+.hero-icon img{width:100%;height:100%;object-fit:cover;display:block}
+.hero-icon-edit{position:absolute;bottom:-2px;right:-2px;width:26px;height:26px;border-radius:50%;
+  background:var(--coral);display:flex;align-items:center;justify-content:center;font-size:13px;
+  border:2px solid #2A2D5C;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+.hero-text{flex:1;min-width:220px}
+.hero h1{margin:0 0 4px;font-size:19px;font-weight:700;letter-spacing:.2px}
+.hero .sub{color:rgba(255,255,255,.75);font-size:14px;font-family:'IBM Plex Sans Thai',sans-serif}
+.hero-badge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:16px;
+  padding:10px 20px;text-align:center;backdrop-filter:blur(6px);min-width:130px}
+.hero-badge-label{display:block;font-size:11px;color:rgba(255,255,255,.7);margin-bottom:2px;font-family:'IBM Plex Sans Thai',sans-serif}
+.hero-badge-value{font-size:20px;font-weight:600}
+.hero-age{font-size:11px;color:rgba(255,255,255,.7);margin-top:3px;font-family:'IBM Plex Sans Thai',sans-serif}
+.hero-meta{position:relative;display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.hero-chip{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:12px;
+  padding:8px 14px;backdrop-filter:blur(6px);font-family:'IBM Plex Sans Thai',sans-serif}
+.hero-chip span{display:block;font-size:11px;color:rgba(255,255,255,.65)}
+.hero-chip b{display:block;font-size:14px;font-weight:600;color:#fff;font-family:'Kanit',sans-serif;margin-top:2px}
+.hero-links{position:relative;display:flex;gap:14px;flex-wrap:wrap;margin-top:18px}
+.hero-link{display:flex;align-items:center;gap:10px;text-decoration:none;background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.25);border-radius:40px;padding:6px 16px 6px 6px;backdrop-filter:blur(6px);
+  transition:.15s}
+.hero-link:hover{background:rgba(255,255,255,.2);transform:translateY(-1px)}
+.hero-link-icon{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.9);flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:18px}
+.hero-link-text{display:flex;flex-direction:column;line-height:1.25}
+.hero-link-text b{font-size:13px;font-weight:600;color:#fff;font-family:'Kanit',sans-serif}
+.hero-link-text span{font-size:11px;color:rgba(255,255,255,.7);font-family:'IBM Plex Sans Thai',sans-serif}
+.card{background:var(--surface);border-radius:20px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow);border:1px solid var(--line)}
+.card h2{font-size:17px;margin:0 0 16px;font-weight:600;display:flex;align-items:center;gap:8px}
+details.card{padding:20px}
+summary{cursor:pointer;font-size:17px;font-weight:600;list-style:none;display:flex;align-items:center;gap:8px}
+summary::-webkit-details-marker{display:none}
+summary::after{content:'▾';margin-left:auto;color:var(--ink-soft);transition:.2s;font-size:14px}
+details[open] summary::after{transform:rotate(180deg)}
+.details-body{margin-top:16px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+label{font-size:13px;font-weight:600;display:block;margin-bottom:6px;color:var(--ink-soft)}
+input,select{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;font-size:16px;
+  background:var(--surface-2);color:var(--ink);transition:.15s;font-family:inherit}
+input:focus,select:focus{outline:none;border-color:var(--coral);background:#fff;box-shadow:0 0 0 4px var(--coral-soft)}
+button{border:0;border-radius:12px;padding:11px 18px;font-size:14px;font-weight:500;cursor:pointer;
+  background:var(--surface-2);color:var(--ink);transition:.15s}
+button:hover{filter:brightness(.97)}
+button:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
+button.primary{background:linear-gradient(135deg,var(--coral),#FF8B7E);color:#fff;
+  box-shadow:0 6px 16px -6px rgba(255,107,129,.55)}
+button.primary:hover{filter:brightness(1.04)}
+button.danger{background:var(--danger-soft);color:var(--danger)}
+button.ghost{background:transparent;border:1.5px solid var(--line);font-size:13px;padding:7px 12px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{border-radius:16px;padding:16px;background:var(--surface-2)}
+.stat-icon{width:32px;height:32px;border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:16px;margin-bottom:10px}
+.stat span{font-size:12.5px;color:var(--ink-soft)}
+.stat b{display:block;font-size:22px;margin-top:4px;font-weight:600}
+.stat.c1 .stat-icon{background:var(--coral-soft);color:var(--coral-dark)}
+.stat.c2 .stat-icon{background:var(--mint-soft);color:var(--mint-dark)}
+.stat.c3 .stat-icon{background:var(--butter-soft);color:#B9761E}
+.stat.c4 .stat-icon{background:#E7E4FB;color:#5B4FC4}
+.stat.c5 .stat-icon{background:var(--sky-soft);color:#2E6FA8}
+.delta{font-weight:600;white-space:nowrap}
+.delta.pos{color:var(--mint-dark)}
+.delta.neg{color:var(--danger)}
+.delta.zero{color:var(--ink-soft)}
+.who-badge{border-radius:14px;padding:12px 14px;font-size:13.5px;line-height:1.5}
+.who-badge.normal{background:var(--mint-soft);color:var(--mint-dark)}
+.who-badge.low{background:var(--danger-soft);color:var(--danger)}
+.who-badge.high{background:var(--butter-soft);color:#9A6314}
+.vpill{display:inline-block;padding:4px 10px;border-radius:10px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.vpill.done{background:var(--mint-soft);color:var(--mint-dark)}
+.vpill.overdue{background:var(--danger-soft);color:var(--danger)}
+.vpill.due{background:var(--butter-soft);color:#9A6314}
+.vpill.upcoming{background:var(--surface-2);color:var(--ink-soft)}
+.vpill.optional{margin-left:6px;background:#E7E4FB;color:#5B4FC4;font-weight:500;padding:2px 8px;font-size:11.5px}
+.tabs{display:flex;gap:6px;margin-bottom:16px;background:var(--surface-2);padding:5px;border-radius:14px;width:fit-content}
+.tabs button{background:transparent;border-radius:10px;padding:9px 16px}
+.tabs button.active{background:var(--coral);color:#fff;box-shadow:0 4px 10px -4px rgba(255,107,129,.6)}
+.chartbox{height:340px}
+.tablewrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:640px}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink-soft);font-weight:600;
+  padding:10px;text-align:right;border-bottom:2px solid var(--line);font-family:'IBM Plex Sans Thai',sans-serif}
+th:first-child,td:first-child{text-align:left}
+td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:right;font-size:14.5px;vertical-align:top}
+tbody tr:hover{background:var(--surface-2)}
+table button{padding:6px 10px;font-size:13px}
+.small{font-size:13px;color:var(--ink-soft)}
+.empty{text-align:center;color:var(--ink-soft);padding:30px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;
+  padding:12px 14px 12px 18px;border-radius:14px;display:none;align-items:center;gap:14px;box-shadow:var(--shadow);
+  z-index:50;font-size:14px;max-width:90vw}
+.toast button{background:var(--coral);color:#fff;padding:7px 14px;font-size:13px;white-space:nowrap}
+.install-banner{position:sticky;top:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:linear-gradient(135deg,#2A2D5C,#3B3178);color:#fff;padding:10px 16px;font-size:13.5px;
+  font-family:'IBM Plex Sans Thai',sans-serif;flex-wrap:wrap}
+.install-banner-actions{display:flex;gap:8px;flex-shrink:0}
+.install-banner-actions button{padding:7px 14px;font-size:13px}
+.install-banner-actions .ghost{background:rgba(255,255,255,.15);border-color:rgba(255,255,255,.35);color:#fff}
+@media(max-width:700px){.grid{grid-template-columns:1fr 1fr}.chartbox{height:290px}
+  #vaxScheduleCard table,#vaxHistoryCard table{min-width:0}}
+@media(max-width:430px){.grid{grid-template-columns:1fr}.container{padding:14px 12px 50px}
+  .card{padding:16px}details.card{padding:16px}.hero{padding:22px 18px}
+  .hero-icon{width:72px;height:72px;font-size:32px}
+  .hero h1{font-size:17px}
+  .hero-badge{width:100%;margin-top:14px;padding:18px 20px}
+  .hero-badge-value{font-size:34px}
+  .hero-age{font-size:13px;margin-top:4px}
+  .hero-link{padding:5px 14px 5px 5px}
+  .hero-link-icon{width:34px;height:34px;font-size:16px}
+  #vaxScheduleCard table,#vaxHistoryCard table{min-width:0}
+  #vaxScheduleCard th,#vaxScheduleCard td,#vaxHistoryCard th,#vaxHistoryCard td{font-size:12px;padding:8px 5px}
+  #vaxScheduleCard .vpill,#vaxHistoryCard .vpill{white-space:normal;font-size:11px;padding:3px 7px;line-height:1.35}
+  #vaxScheduleCard .vpill.optional,#vaxHistoryCard .vpill.optional{display:inline-block;margin:3px 0 0}
+  #vaxScheduleCard table button,#vaxHistoryCard table button{padding:5px 7px;font-size:11.5px}}
+@media print{
+  @page{size:A4 portrait;margin:12mm 10mm}
+  .no-print{display:none !important}
+  html,body{background:#fff;font-size:12px}
+  .container{max-width:100%;padding:0;margin:0}
+  .hero{background:#fff;color:#000;border:1px solid #ddd;box-shadow:none;padding:14px 16px;border-radius:10px}
+  .hero-blob{display:none}
+  .hero-icon{border-color:#ddd}
+  .hero-badge{background:#f7f7f7;border-color:#ddd;color:#000}
+  .hero-chip{background:#f7f7f7;border-color:#ddd;color:#000}
+  .hero-chip span{color:#555}
+  .hero .sub,.hero-age{color:#555}
+  .card{box-shadow:none;border:1px solid #ddd;break-inside:avoid;page-break-inside:avoid;padding:14px;margin-bottom:10px;border-radius:10px}
+  details.card{padding:14px}
+  .grid{grid-template-columns:repeat(3,1fr) !important;gap:8px}
+  .stats{grid-template-columns:repeat(5,1fr) !important;gap:8px}
+  .stat{padding:8px;border:1px solid #eee}
+  .stat-icon{width:22px;height:22px;font-size:12px;margin-bottom:5px}
+  .stat b{font-size:15px}
+  .stat span{font-size:10.5px}
+  .card h2{font-size:14px;margin-bottom:10px}
+  .chartbox{height:200px;overflow:hidden}
+  #historyCard{margin-top:56px}
+  .tablewrap{overflow:visible}
+  table{min-width:0 !important;width:100%;font-size:10.5px}
+  th,td{padding:5px 6px}
+  .who-badge{font-size:11px;padding:8px 10px}
+}
+</style>
+</head>
+<body>
+<div id="installBanner" class="install-banner" style="display:none">
+  <span>📲 ติดตั้งแอปนี้ไว้ในเครื่อง เปิดใช้งานได้แม้ไม่มีเน็ต</span>
+  <div class="install-banner-actions">
+    <button class="ghost" onclick="dismissInstallBanner()">ปิด</button>
+    <button class="primary" onclick="promptInstall()">ติดตั้ง</button>
+  </div>
+</div>
+<div class="container">
+<header class="hero">
+  <div class="hero-blob b1"></div>
+  <div class="hero-blob b2"></div>
+  <div class="hero-content">
+    <div class="hero-icon-wrap">
+      <div class="hero-icon" id="heroIcon" title="แตะเพื่อใส่รูปลูก" onclick="document.getElementById('childPhotoInput').click()">👶</div>
+      <div class="hero-icon-edit no-print" title="แตะเพื่อใส่รูปลูก" onclick="document.getElementById('childPhotoInput').click()">📷</div>
+      <input id="childPhotoInput" type="file" accept="image/*" style="display:none" onchange="handlePhotoSelect(event)">
+    </div>
+    <div class="hero-text">
+      <h1>Baby Weight Tracker</h1>
+      <div class="sub">บันทึกและติดตามน้ําหนักของ <span id="childLabel">ลูก</span></div>
+    </div>
+    <div class="hero-badge">
+      <span class="hero-badge-label">น้ําหนักล่าสุด</span>
+      <span class="hero-badge-value" id="heroLatest">–</span>
+      <div class="hero-age" id="heroAge"></div>
+    </div>
+  </div>
+  <div class="hero-meta" id="heroMeta"></div>
+  <div class="hero-links">
+    <a class="hero-link" href="https://drive.google.com/drive/folders/1ha5J9cNujNeXtxVkoQvXnEmKs3zXlF7k?usp=drive_link" target="_blank" rel="noopener">
+      <span class="hero-link-icon">📷</span>
+      <span class="hero-link-text"><b>รูปน้อง LIN</b><span>เปิดใน Google Drive</span></span>
+    </a>
+    <a class="hero-link" href="https://drive.google.com/drive/folders/1MlfNW5kEyy9lDI7tCpTeBuJqWBuNrmYr?usp=drive_link" target="_blank" rel="noopener">
+      <span class="hero-link-icon">📄</span>
+      <span class="hero-link-text"><b>เอกสารน้อง LIN</b><span>เปิดใน Google Drive</span></span>
+    </a>
+    <a class="hero-link" href="https://golf021.github.io/Baby-log/" target="_blank" rel="noopener">
+      <span class="hero-link-icon">🛌</span>
+      <span class="hero-link-text"><b>สถิติ นอน อึ ฉี่</b><span>เปิด Baby Log</span></span>
+    </a>
+    <a class="hero-link" href="https://golf021.github.io/dspm-checklist/" target="_blank" rel="noopener">
+      <span class="hero-link-icon">🧩</span>
+      <span class="hero-link-text"><b>แบบสังเกตพัฒนาการเด็ก (DSPM)</b><span>เปิดแบบประเมิน</span></span>
+    </a>
+  </div>
+</header>
+<details class="card no-print" id="profileDetails">
+<summary>👤 ข้อมูลลูกและการตั้งค่า</summary>
+<div class="details-body">
+<div class="grid">
+<div><label for="childName">ชื่อเล่น</label><input id="childName" type="text" placeholder="เช่น น้องพีช"></div>
+<div><label for="childSex">เพศ</label><select id="childSex"><option value="">ไม่ระบุ</option><option value="M">ชาย</option><option value="F">หญิง</option></select></div>
+<div><label for="childDob">วันเกิด</label><input id="childDob" type="date"></div>
+<div><label for="childHour">เวลาเกิด (24 ชม.)</label>
+<div style="display:flex;gap:8px;align-items:center">
+<select id="childHour" style="flex:1"></select>
+<span style="color:var(--ink-soft);font-weight:600">:</span>
+<select id="childMinute" style="flex:1"></select>
+</div>
+</div>
+<div><label for="childBirthWeight">น้ําหนักแรกเกิด (กก.)</label><input id="childBirthWeight" type="number" step="0.01" min="0" placeholder="00.00"></div>
+<div><label for="childBloodType">กรุ๊ปเลือด</label><select id="childBloodType">
+<option value="">ไม่ระบุ</option>
+<option value="A">A</option>
+<option value="B">B</option>
+<option value="AB">AB</option>
+<option value="O">O</option>
+</select></div>
+</div>
+<div class="actions">
+<button class="primary" onclick="saveChildProfile()">บันทึกข้อมูลลูก</button>
+</div>
+<div class="small" style="margin-top:10px">ใส่วันเกิดและเพศ เพื่อแสดงอายุของลูกและเทียบน้ําหนักกับเกณฑ์ WHO โดยประมาณ ใส่เวลาเกิดเพื่อบันทึกไว้ในการ์ดด้านบน</div>
+</div>
+</details>
+<div class="card no-print">
+<h2>➕ บันทึกน้ําหนัก</h2>
+<div class="grid">
+<div><label for="date">วันที่</label><input id="date" type="date"></div>
+<div><label for="mother">น้ําหนักแม่ (กก.)</label><input id="mother" type="number" step="0.01" min="0" placeholder="00.00"></div>
+<div><label for="combined">น้ําหนักแม่ + ลูก (กก.)</label><input id="combined" type="number" step="0.01" min="0" placeholder="00.00"></div>
+</div>
+<div style="margin-top:12px"><label for="note">หมายเหตุ (ถ้ามี)</label><input id="note" type="text" placeholder="เช่น ฉีดวัคซีน, ไม่สบาย"></div>
+<div class="actions">
+<button class="primary" onclick="saveEntry()">บันทึกข้อมูล</button>
+<button onclick="clearForm()">ล้างช่องกรอก</button>
+</div>
+<div id="calc" class="small" style="margin-top:10px"></div>
+</div>
+<div class="card">
+<h2>📊 สรุป</h2>
+<div id="whoBox" style="margin-bottom:14px"></div>
+<div class="stats">
+<div class="stat c1"><div class="stat-icon">⚖️</div><span>น้ําหนักล่าสุด</span><b id="latest">-</b></div>
+<div class="stat c2"><div class="stat-icon">📈</div><span>เปลี่ยนจากครั้งก่อน</span><b id="change">-</b></div>
+<div class="stat c5"><div class="stat-icon">⏱️</div><span>อัตราเพิ่มล่าสุด</span><b id="rate">-</b></div>
+<div class="stat c3"><div class="stat-icon">🌱</div><span>เพิ่มจากครั้งแรก</span><b id="fromFirst">-</b></div>
+<div class="stat c4"><div class="stat-icon">🗓️</div><span>บันทึกทั้งหมด</span><b id="count">0</b></div>
+</div>
+</div>
+<div class="card">
+<h2>📈 กราฟน้ําหนัก</h2>
+<div class="tabs no-print">
+<button class="active" data-period="week" onclick="setPeriod('week',this)">รายสัปดาห์</button>
+<button data-period="month" onclick="setPeriod('month',this)">รายเดือน</button>
+<button data-period="year" onclick="setPeriod('year',this)">รายปี</button>
+</div>
+<div class="chartbox"><canvas id="chart"></canvas></div>
+<div id="periodInfo" class="small" style="margin-top:10px"></div>
+</div>
+<div class="card" id="historyCard">
+<h2>📋 ประวัติการชั่ง <button class="ghost no-print" style="margin-left:auto" onclick="window.print()">🖨️ พิมพ์รายงาน</button></h2>
+<div class="small" style="margin-bottom:10px">กด ✏️ เพื่อแก้ไขวันนั้น หรือ 🗑️ เพื่อลบเฉพาะวันนั้น</div>
+<div class="tablewrap">
+<table><thead><tr><th>วันที่</th><th>แม่</th><th>แม่ + ลูก</th><th>ลูก</th><th>เปลี่ยน</th><th class="no-print"></th></tr></thead>
+<tbody id="tbody"></tbody></table>
+</div>
+</div>
+<div class="card no-print" id="vaxFormCard">
+<h2>💉 บันทึกการฉีดวัคซีน</h2>
+<div class="grid">
+<div><label for="vaxSelect">วัคซีน</label><select id="vaxSelect"></select></div>
+<div><label for="vaxDate">วันที่ฉีด</label><input id="vaxDate" type="date"></div>
+<div><label for="vaxLocation">สถานที่ฉีด (ถ้ามี)</label><input id="vaxLocation" type="text" placeholder="เช่น รพ./คลินิก"></div>
+</div>
+<div id="vaxCustomWrap" style="display:none;margin-top:12px"><label for="vaxCustomName">ชื่อวัคซีน</label><input id="vaxCustomName" type="text" placeholder="ระบุชื่อวัคซีน"></div>
+<div style="margin-top:12px"><label for="vaxNote">หมายเหตุ (ถ้ามี)</label><input id="vaxNote" type="text" placeholder="เช่น ล็อตวัคซีน, อาการหลังฉีด"></div>
+<div class="actions">
+<button class="primary" onclick="saveVaccineEntry()">บันทึกวัคซีน</button>
+<button onclick="clearVaxForm()">ล้างช่องกรอก</button>
+</div>
+</div>
+<div class="card" id="vaxScheduleCard">
+<h2>🗓️ กำหนดวันฉีดวัคซีน</h2>
+<div class="small" id="vaxSummary" style="margin-bottom:12px"></div>
+<div class="tablewrap">
+<table><thead><tr><th style="text-align:left">วัคซีน</th><th>กำหนด/สถานะ</th><th class="no-print"></th></tr></thead>
+<tbody id="vaxScheduleBody"></tbody></table>
+</div>
+<div class="small" style="margin-top:10px">ตารางอ้างอิงตามคำแนะนำกระทรวงสาธารณสุขและสมาคมโรคติดเชื้อในเด็กแห่งประเทศไทย (PIDST) เป็นข้อมูลโดยประมาณ วันนัดจริงให้ยึดตามที่แพทย์/สถานพยาบาลนัดหมาย</div>
+</div>
+<div class="card" id="vaxHistoryCard">
+<h2>📋 ประวัติการรับวัคซีน <span class="small" style="margin-left:auto;font-weight:400">(<span id="vaxCount">0</span> ครั้ง)</span></h2>
+<div class="tablewrap">
+<table><thead><tr><th>วันที่</th><th style="text-align:left">วัคซีน</th><th class="no-print"></th></tr></thead>
+<tbody id="vaxHistoryBody"></tbody></table>
+</div>
+</div>
+<div class="card no-print">
+<h2>💾 สํารองข้อมูล</h2>
+<div class="small">ข้อมูลเก็บในเครื่องนี้ด้วย localStorage และสามารถส่งออกเป็นไฟล์ JSON เพื่อสํารองไว้ได้</div>
+<div class="actions">
+<button onclick="exportData()">ส่งออกข้อมูล</button>
+<button onclick="document.getElementById('file').click()">นําเข้าข้อมูล</button>
+<button class="danger" onclick="deleteAll()">ลบข้อมูลทั้งหมด</button>
+<input id="file" type="file" accept=".json" style="display:none" onchange="importData(event)">
+</div>
+</div>
+</div>
+<div class="toast no-print" id="toast"><span id="toastMsg"></span><button onclick="undoDelete()">เลิกทํา</button></div>
+<script>
+/* ---------- WHO weight-for-age reference (approximate, kg): [ageMonths,P3,P50,P97] ---------- */
+const WHO_WFA={
+  M:[[0,2.5,3.3,4.4],[1,3.4,4.5,5.8],[2,4.3,5.6,7.1],[3,5.0,6.4,8.0],[4,5.6,7.0,8.7],[5,6.0,7.5,9.3],
+     [6,6.4,7.9,9.8],[9,7.1,8.9,10.9],[12,7.7,9.6,11.8],[15,8.3,10.3,12.8],[18,8.8,10.9,13.7],
+     [21,9.2,11.5,14.5],[24,9.7,12.2,15.3]],
+  F:[[0,2.4,3.2,4.2],[1,3.2,4.2,5.4],[2,3.9,5.1,6.6],[3,4.5,5.8,7.5],[4,5.0,6.4,8.2],[5,5.4,6.9,8.8],
+     [6,5.7,7.3,9.3],[9,6.5,8.2,10.4],[12,7.0,8.9,11.3],[15,7.6,9.6,12.2],[18,8.1,10.2,13.0],
+     [21,8.6,10.9,13.8],[24,9.0,11.5,14.5]]
+};
+/* ---------- Thai national child vaccination schedule (approximate ages, months from birth) ---------- */
+/* Reference: MOPH Expanded Programme on Immunization (EPI) + PIDST recommended schedule. Ages are   */
+/* approximate; always follow the actual appointment given by the hospital/clinic.                    */
+const VACCINE_SCHEDULE=[
+  {id:"bcg",ageMonths:0,ageText:"แรกเกิด",label:"บีซีจี ป้องกันวัณโรค (BCG)",free:true},
+  {id:"hb1",ageMonths:0,ageText:"แรกเกิด",label:"ตับอักเสบบี เข็มที่ 1 (HB1)",free:true},
+  {id:"dhhi1",ageMonths:2,ageText:"2 เดือน",label:"คอตีบ-บาดทะยัก-ไอกรน-ตับอักเสบบี-ฮิบ เข็มที่ 1 (DTP-HB-Hib1)",free:true},
+  {id:"polio1",ageMonths:2,ageText:"2 เดือน",label:"โปลิโอ เข็มที่ 1 (IPV/OPV1)",free:true},
+  {id:"rota1",ageMonths:2,ageText:"2 เดือน",label:"โรต้า เข็มที่ 1 (Rota1)",free:true},
+  {id:"pcv1",ageMonths:2,ageText:"2 เดือน",label:"นิวโมคอคคัส เข็มที่ 1 (PCV1)",free:false},
+  {id:"dhhi2",ageMonths:4,ageText:"4 เดือน",label:"DTP-HB-Hib เข็มที่ 2",free:true},
+  {id:"polio2",ageMonths:4,ageText:"4 เดือน",label:"โปลิโอ เข็มที่ 2 (IPV/OPV2)",free:true},
+  {id:"rota2",ageMonths:4,ageText:"4 เดือน",label:"โรต้า เข็มที่ 2 (Rota2)",free:true},
+  {id:"pcv2",ageMonths:4,ageText:"4 เดือน",label:"นิวโมคอคคัส เข็มที่ 2 (PCV2)",free:false},
+  {id:"dhhi3",ageMonths:6,ageText:"6 เดือน",label:"DTP-HB-Hib เข็มที่ 3",free:true},
+  {id:"polio3",ageMonths:6,ageText:"6 เดือน",label:"โปลิโอ กิน เข็มที่ 3 (OPV3)",free:true},
+  {id:"rota3",ageMonths:6,ageText:"6 เดือน",label:"โรต้า เข็มที่ 3 (Rota3)",free:false},
+  {id:"flu1",ageMonths:6,ageText:"6 เดือนขึ้นไป",label:"ไข้หวัดใหญ่ เข็มแรก (ฉีดซ้ำทุกปี)",free:false},
+  {id:"mmr1",ageMonths:9,ageText:"9-12 เดือน",label:"หัด-หัดเยอรมัน-คางทูม เข็มที่ 1 (MMR1)",free:true},
+  {id:"je1",ageMonths:9,ageText:"9-12 เดือน",label:"ไข้สมองอักเสบเจอี เข็มที่ 1 (JE1)",free:true},
+  {id:"hepa1",ageMonths:12,ageText:"1 ปี",label:"ตับอักเสบเอ เข็มที่ 1 (HepA1)",free:false},
+  {id:"varicella1",ageMonths:12,ageText:"1 ปี",label:"อีสุกอีใส เข็มที่ 1",free:false},
+  {id:"dtp4",ageMonths:18,ageText:"1 ปี 6 เดือน",label:"DTP กระตุ้น เข็มที่ 4",free:true},
+  {id:"opv4",ageMonths:18,ageText:"1 ปี 6 เดือน",label:"โปลิโอ กระตุ้น เข็มที่ 4 (OPV4)",free:true},
+  {id:"je2",ageMonths:18,ageText:"1 ปี 6 เดือน",label:"ไข้สมองอักเสบเจอี เข็มที่ 2 (JE2)",free:true},
+  {id:"varicella2",ageMonths:18,ageText:"1 ปี 6 เดือน",label:"อีสุกอีใส เข็มที่ 2",free:false},
+  {id:"hepa2",ageMonths:18,ageText:"1 ปี 6 เดือน - 2 ปี",label:"ตับอักเสบเอ เข็มที่ 2 (HepA2)",free:false},
+  {id:"dtp5",ageMonths:48,ageText:"4-6 ปี",label:"DTP กระตุ้น เข็มที่ 5",free:true},
+  {id:"opv5",ageMonths:48,ageText:"4-6 ปี",label:"โปลิโอ กระตุ้น เข็มที่ 5 (OPV5)",free:true},
+  {id:"td",ageMonths:132,ageText:"11-12 ปี (ป.6)",label:"คอตีบ-บาดทะยัก กระตุ้น (dT)",free:true},
+  {id:"hpv1",ageMonths:132,ageText:"11-12 ปี (ป.6)",label:"เอชพีวี เข็มที่ 1 (HPV1)",free:true},
+  {id:"hpv2",ageMonths:138,ageText:"6-12 เดือนหลัง HPV1",label:"เอชพีวี เข็มที่ 2 (HPV2)",free:true}
+];
+/* ---------- Thai nakshatra (12-year animal cycle) & zodiac sign ---------- */
+const THAI_NAKSHATRA=["ชวด (หนู)","ฉลู (วัว)","ขาล (เสือ)","เถาะ (กระต่าย)","มะโรง (งูใหญ่)","มะเส็ง (งูเล็ก)",
+  "มะเมีย (ม้า)","มะแม (แพะ)","วอก (ลิง)","ระกา (ไก่)","จอ (หมา)","กุน (หมู)"];
+function nakshatraYear(dob){
+  const d=new Date(dob+"T00:00:00");
+  const y=d.getFullYear();
+  const songkran=new Date(y+"-04-13T00:00:00");
+  const ny=d<songkran?y-1:y; // ปีนักษัตรไทยเปลี่ยนช่วงสงกรานต์
+  const idx=(((ny-2020)%12)+12)%12; // 2020 = ปีชวด
+  return THAI_NAKSHATRA[idx];
+}
+const ZODIAC_RANGES=[
+  [1,20,2,18,"ราศีกุมภ์"],[2,19,3,20,"ราศีมีน"],[3,21,4,19,"ราศีเมษ"],[4,20,5,20,"ราศีพฤษภ"],
+  [5,21,6,20,"ราศีเมถุน"],[6,21,7,22,"ราศีกรกฎ"],[7,23,8,22,"ราศีสิงห์"],[8,23,9,22,"ราศีกันย์"],
+  [9,23,10,22,"ราศีตุลย์"],[10,23,11,21,"ราศีพิจิก"],[11,22,12,21,"ราศีธนู"]
+];
+function thaiZodiacSign(dob){
+  const d=new Date(dob+"T00:00:00");
+  const m=d.getMonth()+1,day=d.getDate();
+  for(const [m1,d1,m2,d2,name] of ZODIAC_RANGES){
+    if((m===m1&&day>=d1)||(m===m2&&day<=d2))return name;
+  }
+  return "ราศีมังกร"; // 22 ธ.ค. - 19 ม.ค.
+}
+/* ---------- App data (single child) ---------- */
+function loadApp(){
+  const raw=localStorage.getItem("babyWeightApp");
+  if(raw){
+    const d=JSON.parse(raw);
+    if(d.child&&Array.isArray(d.entries)){
+      if(!Array.isArray(d.vaccines))d.vaccines=[];             // migrate: add vaccine log if missing
+      return d;                                                // already single-child format
+    }
+    if(Array.isArray(d.children)){                              // migrate from old multi-child format
+      const c=d.children[0]||{name:"ลูก",dob:"",sex:""};
+      const ents=(d.entries&&d.entries[c.id])||[];
+      const app={child:{name:c.name||"ลูก",dob:c.dob||"",sex:c.sex||"",birthTime:""},entries:ents,vaccines:[]};
+      localStorage.setItem("babyWeightApp",JSON.stringify(app));
+      return app;
+    }
+  }
+  const old=JSON.parse(localStorage.getItem("babyWeightEntries")||"[]");   // very old flat format
+  const app={child:{name:"ลูก",dob:"",sex:"",birthTime:""},entries:old,vaccines:[]};
+  localStorage.setItem("babyWeightApp",JSON.stringify(app));
+  return app;
+}
+function saveApp(){localStorage.setItem("babyWeightApp",JSON.stringify(appData))}
+function persistEntries(){appData.entries=entries;saveApp()}
+function persistVaccines(){appData.vaccines=vaccineDoses;saveApp()}
+let appData=loadApp();
+let entries=appData.entries;
+let vaccineDoses=appData.vaccines||[];
+let period="week", chart=null, editId=null, editVaxId=null, lastSnapshot=null, toastTimer=null;
+/* ---------- Child profile ---------- */
+function populateTimeSelects(){
+  const h=document.getElementById("childHour"),m=document.getElementById("childMinute");
+  h.innerHTML='<option value="">ชม.</option>'+Array.from({length:24},(_,i)=>{const v=String(i).padStart(2,"0");return `<option value="${v}">${v}</option>`}).join("");
+  m.innerHTML='<option value="">นาที</option>'+Array.from({length:60},(_,i)=>{const v=String(i).padStart(2,"0");return `<option value="${v}">${v}</option>`}).join("");
+}
+function loadChildProfileForm(){
+  const c=appData.child;
+  document.getElementById("childName").value=c.name||"";
+  document.getElementById("childDob").value=c.dob||"";
+  document.getElementById("childSex").value=c.sex||"";
+  const [h,m]=(c.birthTime||"").split(":");
+  document.getElementById("childHour").value=h||"";
+  document.getElementById("childMinute").value=m||"";
+  document.getElementById("childBirthWeight").value=(c.birthWeight!=null&&c.birthWeight!=="")?c.birthWeight:"";
+  document.getElementById("childBloodType").value=c.bloodType||"";
+  document.getElementById("childLabel").textContent=c.name||"ลูก";
+}
+function saveChildProfile(){
+  appData.child.name=document.getElementById("childName").value.trim()||"ลูก";
+  appData.child.dob=document.getElementById("childDob").value;
+  appData.child.sex=document.getElementById("childSex").value;
+  const h=document.getElementById("childHour").value,m=document.getElementById("childMinute").value;
+  appData.child.birthTime=(h&&m)?`${h}:${m}`:"";
+  const bw=parseFloat(document.getElementById("childBirthWeight").value);
+  appData.child.birthWeight=isFinite(bw)?bw:"";
+  appData.child.bloodType=document.getElementById("childBloodType").value;
+  saveApp();loadChildProfileForm();render();
+  alert("บันทึกข้อมูลลูกแล้ว");
+}
+const THAI_DAYS=["อาทิตย์","จันทร์","อังคาร","พุธ","พฤหัส","ศุกร์","เสาร์"];
+function formatDateWithDay(dateStr){
+  const d=new Date(dateStr+"T00:00:00");
+  const dayName=THAI_DAYS[d.getDay()];
+  const dayNum=d.getDate();
+  const month=d.toLocaleDateString("th-TH",{month:"short"});
+  const year=d.toLocaleDateString("th-TH",{year:"numeric"});
+  return `วัน${dayName}ที่ ${dayNum} ${month} ${year}`;
+}
+function renderHeroMeta(){
+  const c=appData.child;
+  const box=document.getElementById("heroMeta");
+  if(!c||(!c.dob&&!c.birthTime&&!c.birthWeight&&!c.bloodType)){box.innerHTML="";return}
+  let chips="";
+  if(c.dob){
+    chips+=`<div class="hero-chip"><span>วันเกิด</span><b>${formatDateWithDay(c.dob)}</b></div>`;
+    chips+=`<div class="hero-chip"><span>ปีนักษัตร</span><b>${nakshatraYear(c.dob)}</b></div>`;
+    chips+=`<div class="hero-chip"><span>ราศี</span><b>${thaiZodiacSign(c.dob)}</b></div>`;
+  }
+  if(c.birthTime){
+    chips+=`<div class="hero-chip"><span>เวลาเกิด</span><b>${c.birthTime} น.</b></div>`;
+  }
+  if(c.birthWeight!=null&&c.birthWeight!==""){
+    chips+=`<div class="hero-chip"><span>น้ําหนักแรกเกิด</span><b>${fmtWeight(+c.birthWeight)}</b></div>`;
+  }
+  if(c.bloodType){
+    chips+=`<div class="hero-chip"><span>กรุ๊ปเลือด</span><b>${esc(c.bloodType)}</b></div>`;
+  }
+  box.innerHTML=chips;
+}
+function renderHeroIcon(){
+  const el=document.getElementById("heroIcon");
+  const c=appData.child;
+  el.innerHTML=(c&&c.photo)?`<img src="${c.photo}" alt="รูปลูก">`:"👶";
+}
+function readAndCompressImage(file,maxSize=320,quality=.82){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const img=new Image();
+      img.onload=()=>{
+        let w=img.width,h=img.height;
+        if(w>h){if(w>maxSize){h=Math.round(h*maxSize/w);w=maxSize}}
+        else{if(h>maxSize){w=Math.round(w*maxSize/h);h=maxSize}}
+        const canvas=document.createElement("canvas");
+        canvas.width=w;canvas.height=h;
+        canvas.getContext("2d").drawImage(img,0,0,w,h);
+        resolve(canvas.toDataURL("image/jpeg",quality));
+      };
+      img.onerror=()=>reject(new Error("โหลดรูปภาพไม่สําเร็จ"));
+      img.src=reader.result;
+    };
+    reader.onerror=()=>reject(new Error("อ่านไฟล์ไม่สําเร็จ"));
+    reader.readAsDataURL(file);
+  });
+}
+async function handlePhotoSelect(ev){
+  const file=ev.target.files[0];if(!file)return;
+  try{
+    const dataUrl=await readAndCompressImage(file);
+    appData.child.photo=dataUrl;
+    saveApp();
+    renderHeroIcon();
+  }catch(e){
+    alert("ไม่สามารถใส่รูปนี้ได้ ลองเลือกรูปอื่น");
+  }
+  ev.target.value="";
+}
+/* ---------- Helpers ---------- */
+function today(){const d=new Date();d.setMinutes(d.getMinutes()-d.getTimezoneOffset());return d.toISOString().slice(0,10)}
+function formatDate(s){return new Date(s+"T00:00:00").toLocaleDateString("th-TH",{day:"2-digit",month:"short",year:"numeric"})}
+function esc(s){return (s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function fmtWeight(kg){return kg<1?Math.round(kg*1000)+" ก.":kg.toFixed(2)+" กก."}
+function deltaBadge(n){
+  if(n===null||n===undefined)return '<span class="delta zero">–</span>';
+  const g=n*1000;
+  const cls=g>0.5?"pos":(g<-0.5?"neg":"zero");
+  const arrow=g>0.5?"▲":(g<-0.5?"▼":"●");
+  const val=(g>0?"+":"")+Math.round(g);
+  return `<span class="delta ${cls}">${arrow} ${val} ก.</span>`;
+}
+function rateBadge(g){
+  const cls=g>0.5?"pos":(g<-0.5?"neg":"zero");
+  const arrow=g>0.5?"▲":(g<-0.5?"▼":"●");
+  const val=(g>0?"+":"")+Math.round(g);
+  return `<span class="delta ${cls}">${arrow} ${val} ก./วัน</span>`;
+}
+function ageAtDate(dateStr){
+  const c=appData.child;if(!c||!c.dob)return null;
+  const days=Math.round((new Date(dateStr+"T00:00:00")-new Date(c.dob+"T00:00:00"))/86400000);
+  return days>=0?days:null;
+}
+function ageLabel(days){
+  if(days<60)return days+" วัน";
+  const months=days/30.4375;
+  if(months<24)return months.toFixed(1)+" เดือน";
+  return (months/12).toFixed(1)+" ปี";
+}
+function computeRate(){
+  if(entries.length<2)return null;
+  const last=entries[entries.length-1],prev=entries[entries.length-2];
+  const days=(new Date(last.date+"T00:00:00")-new Date(prev.date+"T00:00:00"))/86400000;
+  if(days<=0)return null;
+  return ((last.baby-prev.baby)*1000)/days;
+}
+function whoStatus(){
+  const c=appData.child;if(!c||!c.dob||!c.sex||!entries.length)return null;
+  const last=entries[entries.length-1];
+  const ad=ageAtDate(last.date);if(ad==null)return null;
+  const months=Math.max(0,Math.min(24,ad/30.4375));
+  const table=WHO_WFA[c.sex];if(!table)return null;
+  let lo=table[0],hi=table[table.length-1];
+  for(let i=0;i<table.length-1;i++){if(months>=table[i][0]&&months<=table[i+1][0]){lo=table[i];hi=table[i+1];break}}
+  const t=hi[0]===lo[0]?0:(months-lo[0])/(hi[0]-lo[0]);
+  const p3=lo[1]+(hi[1]-lo[1])*t,p50=lo[2]+(hi[2]-lo[2])*t,p97=lo[3]+(hi[3]-lo[3])*t;
+  const cls=last.baby<p3?"low":(last.baby>p97?"high":"normal");
+  return {cls,p3,p50,p97};
+}
+/* ---------- Vaccine helpers ---------- */
+function vaccineDueDate(ageMonths){
+  const c=appData.child;
+  if(!c||!c.dob)return null;
+  const d=new Date(c.dob+"T00:00:00");
+  d.setDate(d.getDate()+Math.round(ageMonths*30.4375));
+  return d;
+}
+function vaccineGivenRecord(scheduleId){
+  return vaccineDoses.find(v=>v.scheduleId===scheduleId)||null;
+}
+function nextVaccineInfo(){
+  const c=appData.child;
+  if(!c||!c.dob)return null;
+  const now=new Date();now.setHours(0,0,0,0);
+  const pending=VACCINE_SCHEDULE.filter(item=>!vaccineGivenRecord(item.id));
+  if(!pending.length)return {done:true};
+  let best=null,bestDue=null;
+  pending.forEach(item=>{
+    const due=vaccineDueDate(item.ageMonths);
+    if(!bestDue||due<bestDue){bestDue=due;best=item;}
+  });
+  const diffDays=Math.round((bestDue-now)/86400000);
+  return {item:best,due:bestDue,diffDays};
+}
+/* ---------- Entry form ---------- */
+document.getElementById("date").value=today();
+function saveEntry(){
+  const date=document.getElementById("date").value;
+  const mother=parseFloat(document.getElementById("mother").value);
+  const combined=parseFloat(document.getElementById("combined").value);
+  const note=document.getElementById("note").value.trim();
+  if(!date||!isFinite(mother)||!isFinite(combined)){alert("กรุณากรอกวันที่และน้ําหนักให้ครบ");return}
+  const baby=+(combined-mother).toFixed(2);
+  if(baby<=0){alert("น้ําหนักแม่ + ลูก ต้องมากกว่าน้ําหนักแม่");return}
+  if(editId){
+    const conflict=entries.find(x=>x.date===date&&x.id!==editId);
+    if(conflict){
+      if(!confirm(`วันที่ ${formatDate(date)} มีข้อมูลของอีกรายการอยู่แล้ว\nต้องการแทนที่ด้วยข้อมูลนี้หรือไม่?`))return;
+      entries=entries.filter(x=>x.id!==conflict.id);
+    }
+    const i=entries.findIndex(x=>x.id===editId);
+    if(i>=0)entries[i]={...entries[i],date,mother,combined,baby,note};
+    editId=null;
+  }else{
+    const sameDay=entries.findIndex(x=>x.date===date);
+    if(sameDay>=0){
+      if(!confirm(`วันที่ ${formatDate(date)} มีข้อมูลอยู่แล้ว\nต้องการแก้ไขข้อมูลวันนั้นหรือไม่?`))return;
+      entries[sameDay]={...entries[sameDay],mother,combined,baby,note};
+    }else{
+      entries.push({id:Date.now(),date,mother,combined,baby,note});
+    }
+  }
+  entries.sort((a,b)=>a.date.localeCompare(b.date));
+  persistEntries();
+  clearForm();render();
+}
+function clearForm(){
+  if(editId&&!confirm("ยกเลิกการแก้ไขนี้หรือไม่? ข้อมูลที่แก้ไขจะไม่ถูกบันทึก"))return;
+  editId=null;
+  document.getElementById("date").value=today();
+  document.getElementById("mother").value="";
+  document.getElementById("combined").value="";
+  document.getElementById("note").value="";
+  document.getElementById("calc").textContent="";
+}
+["mother","combined"].forEach(id=>document.getElementById(id).addEventListener("input",()=>{
+  const m=parseFloat(document.getElementById("mother").value),c=parseFloat(document.getElementById("combined").value);
+  document.getElementById("calc").textContent=(isFinite(m)&&isFinite(c))?`น้ําหนักลูก = ${fmtWeight(+(c-m).toFixed(2))}`:"";
+}));
+function setPeriod(p,btn){
+  period=p;document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));btn.classList.add("active");drawChart();
+}
+/* ---------- Vaccine form ---------- */
+function populateVaxSelect(){
+  const sel=document.getElementById("vaxSelect");
+  sel.innerHTML=VACCINE_SCHEDULE.map(v=>`<option value="${v.id}">${v.ageText} • ${esc(v.label)}${v.free?"":" (ทางเลือก)"}</option>`).join("")
+    +'<option value="custom">อื่นๆ / ระบุเอง...</option>';
+  sel.addEventListener("change",toggleVaxCustom);
+}
+function toggleVaxCustom(){
+  document.getElementById("vaxCustomWrap").style.display=document.getElementById("vaxSelect").value==="custom"?"block":"none";
+}
+function saveVaccineEntry(){
+  const sel=document.getElementById("vaxSelect").value;
+  const date=document.getElementById("vaxDate").value;
+  const location=document.getElementById("vaxLocation").value.trim();
+  const note=document.getElementById("vaxNote").value.trim();
+  if(!date){alert("กรุณาเลือกวันที่ฉีด");return}
+  let scheduleId=null,name="";
+  if(sel==="custom"){
+    name=document.getElementById("vaxCustomName").value.trim();
+    if(!name){alert("กรุณาระบุชื่อวัคซีน");return}
+  }else{
+    scheduleId=sel;
+    const item=VACCINE_SCHEDULE.find(v=>v.id===sel);
+    name=item?item.label:sel;
+  }
+  if(editVaxId){
+    const conflict=scheduleId?vaccineDoses.find(x=>x.scheduleId===scheduleId&&x.id!==editVaxId):null;
+    if(conflict){
+      if(!confirm(`มีบันทึกการฉีด "${conflict.name}" วันที่ ${formatDate(conflict.date)} อยู่แล้ว\nต้องการแทนที่ด้วยข้อมูลนี้หรือไม่?`))return;
+      vaccineDoses=vaccineDoses.filter(x=>x.id!==conflict.id);
+    }
+    const i=vaccineDoses.findIndex(x=>x.id===editVaxId);
+    if(i>=0)vaccineDoses[i]={...vaccineDoses[i],scheduleId,name,date,location,note};
+    editVaxId=null;
+  }else{
+    if(scheduleId){
+      const existing=vaccineGivenRecord(scheduleId);
+      if(existing){
+        if(!confirm(`มีบันทึกการฉีด "${existing.name}" อยู่แล้วเมื่อ ${formatDate(existing.date)}\nต้องการแทนที่ด้วยข้อมูลนี้หรือไม่?`))return;
+        vaccineDoses=vaccineDoses.filter(x=>x.id!==existing.id);
+      }
+    }
+    vaccineDoses.push({id:Date.now(),scheduleId,name,date,location,note});
+  }
+  vaccineDoses.sort((a,b)=>a.date.localeCompare(b.date));
+  persistVaccines();
+  clearVaxForm();render();
+}
+function clearVaxForm(){
+  if(editVaxId&&!confirm("ยกเลิกการแก้ไขนี้หรือไม่? ข้อมูลที่แก้ไขจะไม่ถูกบันทึก"))return;
+  editVaxId=null;
+  document.getElementById("vaxSelect").value=VACCINE_SCHEDULE[0]?VACCINE_SCHEDULE[0].id:"custom";
+  toggleVaxCustom();
+  document.getElementById("vaxCustomName").value="";
+  document.getElementById("vaxDate").value=today();
+  document.getElementById("vaxLocation").value="";
+  document.getElementById("vaxNote").value="";
+}
+function quickMarkGiven(scheduleId,suggestedDate){
+  document.getElementById("vaxSelect").value=scheduleId;
+  toggleVaxCustom();
+  document.getElementById("vaxDate").value=suggestedDate||today();
+  window.scrollTo({top:document.getElementById("vaxFormCard").offsetTop-10,behavior:"smooth"});
+}
+function editVaccineEntry(id){
+  const e=vaccineDoses.find(x=>x.id===id);if(!e)return;
+  editVaxId=id;
+  document.getElementById("vaxSelect").value=e.scheduleId||"custom";
+  toggleVaxCustom();
+  if(!e.scheduleId)document.getElementById("vaxCustomName").value=e.name;
+  document.getElementById("vaxDate").value=e.date;
+  document.getElementById("vaxLocation").value=e.location||"";
+  document.getElementById("vaxNote").value=e.note||"";
+  window.scrollTo({top:document.getElementById("vaxFormCard").offsetTop-10,behavior:"smooth"});
+}
+function deleteVaccineEntry(id){
+  const e=vaccineDoses.find(x=>x.id===id);if(!e)return;
+  if(!confirm(`ต้องการลบบันทึกการฉีด "${e.name}" วันที่ ${formatDate(e.date)} หรือไม่?`))return;
+  lastSnapshot={type:"vaccines",data:vaccineDoses.slice()};
+  vaccineDoses=vaccineDoses.filter(x=>x.id!==id);
+  persistVaccines();render();
+  showToast(`ลบบันทึกวัคซีน "${e.name}" แล้ว`);
+}
+/* ---------- Render ---------- */
+function render(){
+  const body=document.getElementById("tbody");body.innerHTML="";
+  if(!entries.length)body.innerHTML='<tr><td colspan="6" class="empty">ยังไม่มีข้อมูล</td></tr>';
+  entries.slice().reverse().forEach((e,ri)=>{
+    const idx=entries.length-1-ri;
+    const prev=entries[idx-1],ch=prev?e.baby-prev.baby:null;
+    const ad=ageAtDate(e.date);
+    const ageTxt=ad!=null?ageLabel(ad):"";
+    body.innerHTML+=`<tr>
+<td>${formatDate(e.date)}${ageTxt?`<div class="small" style="margin-top:2px">${ageTxt}</div>`:""}${e.note?`<div class="small" style="margin-top:2px;color:var(--coral-dark)">📝 ${esc(e.note)}</div>`:""}</td>
+<td>${e.mother.toFixed(2)}</td>
+<td>${e.combined.toFixed(2)}</td>
+<td><b>${fmtWeight(e.baby)}</b></td>
+<td>${deltaBadge(ch)}</td>
+<td class="no-print"><button onclick="editEntry(${e.id})">✏️ แก้ไข</button> <button class="danger" onclick="deleteEntry(${e.id})">🗑️ ลบวัน</button></td>
+</tr>`;
+  });
+  document.getElementById("count").textContent=entries.length;
+  if(entries.length){
+    const first=entries[0],last=entries[entries.length-1],prev=entries[entries.length-2];
+    document.getElementById("latest").textContent=fmtWeight(last.baby);
+    document.getElementById("change").innerHTML=prev?deltaBadge(last.baby-prev.baby):"-";
+    document.getElementById("fromFirst").innerHTML=deltaBadge(last.baby-first.baby);
+    document.getElementById("heroLatest").textContent=fmtWeight(last.baby);
+    const rate=computeRate();
+    document.getElementById("rate").innerHTML=rate===null?"-":rateBadge(rate);
+    const ad=ageAtDate(last.date);
+    document.getElementById("heroAge").textContent=ad!=null?("อายุ "+ageLabel(ad)):"";
+  }else{
+    ["latest","change","fromFirst","rate"].forEach(id=>document.getElementById(id).textContent="-");
+    document.getElementById("heroLatest").textContent="–";
+    document.getElementById("heroAge").textContent="";
+  }
+  renderWhoBox();
+  renderHeroMeta();
+  renderHeroIcon();
+  renderVaccineSchedule();
+  renderVaccineHistory();
+  drawChart();
+}
+function renderWhoBox(){
+  const box=document.getElementById("whoBox");
+  const c=appData.child;
+  if(!entries.length){box.innerHTML="";return}
+  if(!c.dob||!c.sex){
+    box.innerHTML=`<div class="small">i️ ตั้งค่าวันเกิดและเพศของลูกในส่วน "ข้อมูลลูกและการตั้งค่า" ด้านบน เพื่อดูอายุและเทียบน้ําหนักกับเกณฑ์ WHO</div>`;
+    return;
+  }
+  const w=whoStatus();
+  if(!w){box.innerHTML="";return}
+  const labelMap={normal:"อยู่ในเกณฑ์ปกติ ✅",low:"ต่ํากว่าเกณฑ์ ⚠️",high:"สูงกว่าเกณฑ์ ⚠️"};
+  box.innerHTML=`<div class="who-badge ${w.cls}"><b>เทียบเกณฑ์ WHO:</b> ${labelMap[w.cls]} (ค่ากลางที่อายุนี้ ≈ ${w.p50.toFixed(2)} กก.)
+  <div style="margin-top:4px;opacity:.85">ข้อมูลโดยประมาณ ไม่ใช่คําวินิจฉัยทางการแพทย์ ควรปรึกษากุมารแพทย์เพื่อประเมินที่แม่นยํา</div></div>`;
+}
+function renderVaccineSchedule(){
+  const body=document.getElementById("vaxScheduleBody");
+  const c=appData.child;
+  const hasDob=!!(c&&c.dob);
+  const now=new Date();now.setHours(0,0,0,0);
+  body.innerHTML="";
+  VACCINE_SCHEDULE.forEach(item=>{
+    const given=vaccineGivenRecord(item.id);
+    let statusHtml,actionHtml;
+    if(given){
+      statusHtml=`<span class="vpill done">✅ ฉีดแล้ว ${formatDate(given.date)}</span>`;
+      actionHtml=`<button onclick="editVaccineEntry(${given.id})">✏️</button> <button class="danger" onclick="deleteVaccineEntry(${given.id})">🗑️</button>`;
+    }else if(!hasDob){
+      statusHtml=`<span class="vpill upcoming">–</span>`;
+      actionHtml=`<button onclick="quickMarkGiven('${item.id}')">💉 บันทึก</button>`;
+    }else{
+      const due=vaccineDueDate(item.ageMonths);
+      const dueStr=due.toISOString().slice(0,10);
+      const diffDays=Math.round((due-now)/86400000);
+      if(diffDays>14){statusHtml=`<span class="vpill upcoming">อีก ${diffDays} วัน (${formatDate(dueStr)})</span>`;}
+      else if(diffDays>=0){statusHtml=`<span class="vpill due">ถึงกำหนดแล้ว (${formatDate(dueStr)})</span>`;}
+      else{statusHtml=`<span class="vpill overdue">เลยกำหนด ${Math.abs(diffDays)} วัน</span>`;}
+      actionHtml=`<button onclick="quickMarkGiven('${item.id}','${dueStr}')">💉 บันทึก</button>`;
+    }
+    body.innerHTML+=`<tr>
+<td style="text-align:left"><div class="small" style="margin-bottom:2px">${item.ageText}</div><b>${esc(item.label)}</b>${item.free?"":'<span class="vpill optional">ทางเลือก</span>'}</td>
+<td>${statusHtml}</td>
+<td class="no-print">${actionHtml}</td>
+</tr>`;
+  });
+  const summaryEl=document.getElementById("vaxSummary");
+  if(!hasDob){
+    summaryEl.innerHTML='ใส่วันเกิดของลูกในส่วน "ข้อมูลลูกและการตั้งค่า" ด้านบน เพื่อคำนวณกำหนดวันฉีดวัคซีนแต่ละเข็ม';
+  }else{
+    const info=nextVaccineInfo();
+    if(!info||info.done){
+      summaryEl.innerHTML=`<span class="vpill done">✅ ฉีดครบตามตารางแนะนำแล้ว</span>`;
+    }else{
+      const cls=info.diffDays<0?"overdue":(info.diffDays<=14?"due":"upcoming");
+      const dueStr=info.due.toISOString().slice(0,10);
+      const txt=info.diffDays<0?`เลยกำหนดมาแล้ว ${Math.abs(info.diffDays)} วัน`
+        :(info.diffDays===0?"ถึงกำหนดวันนี้":`อีก ${info.diffDays} วัน (${formatDate(dueStr)})`);
+      summaryEl.innerHTML=`เข็มถัดไป: <b>${esc(info.item.label)}</b> — <span class="vpill ${cls}">${txt}</span>`;
+    }
+  }
+}
+function renderVaccineHistory(){
+  const body=document.getElementById("vaxHistoryBody");
+  body.innerHTML="";
+  if(!vaccineDoses.length){
+    body.innerHTML='<tr><td colspan="3" class="empty">ยังไม่มีประวัติการฉีดวัคซีน</td></tr>';
+    document.getElementById("vaxCount").textContent="0";
+    return;
+  }
+  vaccineDoses.slice().sort((a,b)=>b.date.localeCompare(a.date)).forEach(e=>{
+    const ad=ageAtDate(e.date);
+    const ageTxt=ad!=null?ageLabel(ad):"";
+    body.innerHTML+=`<tr>
+<td>${formatDate(e.date)}${ageTxt?`<div class="small" style="margin-top:2px">อายุ ${ageTxt}</div>`:""}</td>
+<td style="text-align:left"><b>${esc(e.name)}</b>${e.location?`<div class="small" style="margin-top:2px">📍 ${esc(e.location)}</div>`:""}${e.note?`<div class="small" style="margin-top:2px;color:var(--coral-dark)">📝 ${esc(e.note)}</div>`:""}</td>
+<td class="no-print"><button onclick="editVaccineEntry(${e.id})">✏️</button> <button class="danger" onclick="deleteVaccineEntry(${e.id})">🗑️</button></td>
+</tr>`;
+  });
+  document.getElementById("vaxCount").textContent=vaccineDoses.length;
+}
+/* ---------- Edit / delete (with undo) ---------- */
+function editEntry(id){
+  const e=entries.find(x=>x.id===id);if(!e)return;
+  editId=id;
+  document.getElementById("date").value=e.date;
+  document.getElementById("mother").value=e.mother;
+  document.getElementById("combined").value=e.combined;
+  document.getElementById("note").value=e.note||"";
+  document.getElementById("calc").textContent=`น้ําหนักลูก = ${fmtWeight(e.baby)}`;
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function showToast(msg){
+  clearTimeout(toastTimer);
+  document.getElementById("toastMsg").textContent=msg;
+  document.getElementById("toast").style.display="flex";
+  toastTimer=setTimeout(()=>{document.getElementById("toast").style.display="none";lastSnapshot=null},6000);
+}
+function undoDelete(){
+  if(!lastSnapshot)return;
+  if(lastSnapshot.type==="entries"){entries=lastSnapshot.data;persistEntries();}
+  else if(lastSnapshot.type==="vaccines"){vaccineDoses=lastSnapshot.data;persistVaccines();}
+  else if(lastSnapshot.type==="all"){
+    entries=lastSnapshot.data.entries;vaccineDoses=lastSnapshot.data.vaccines;
+    persistEntries();persistVaccines();
+  }
+  lastSnapshot=null;
+  render();
+  document.getElementById("toast").style.display="none";
+  clearTimeout(toastTimer);
+}
+function deleteEntry(id){
+  const e=entries.find(x=>x.id===id);if(!e)return;
+  if(!confirm(`ต้องการลบข้อมูลวันที่ ${formatDate(e.date)} หรือไม่?\nน้ําหนักลูก ${fmtWeight(e.baby)}`))return;
+  lastSnapshot={type:"entries",data:entries.slice()};
+  entries=entries.filter(x=>x.id!==id);
+  persistEntries();render();
+  showToast(`ลบข้อมูลวันที่ ${formatDate(e.date)} แล้ว`);
+}
+function deleteAll(){
+  if(!entries.length&&!vaccineDoses.length)return;
+  if(!confirm("ต้องการลบข้อมูลน้ําหนักและวัคซีนทั้งหมดจริงหรือไม่?"))return;
+  lastSnapshot={type:"all",data:{entries:entries.slice(),vaccines:vaccineDoses.slice()}};
+  entries=[];vaccineDoses=[];
+  persistEntries();persistVaccines();render();
+  showToast("ลบข้อมูลทั้งหมดแล้ว");
+}
+/* ---------- Chart ---------- */
+function drawChart(){
+  const canvas=document.getElementById("chart");
+  if(chart)chart.destroy();
+  if(!entries.length){document.getElementById("periodInfo").textContent="เพิ่มข้อมูลเพื่อแสดงกราฟ";return}
+  let data=entries.map(e=>({...e,label:e.date}));
+  if(period==="week"){
+    const end=new Date(entries[entries.length-1].date+"T00:00:00"),start=new Date(end);start.setDate(end.getDate()-6);
+    data=data.filter(e=>{let d=new Date(e.date+"T00:00:00");return d>=start&&d<=end});
+  }else if(period==="month"){
+    const d=new Date(entries[entries.length-1].date+"T00:00:00"),y=d.getFullYear(),m=d.getMonth();
+    data=data.filter(e=>{let x=new Date(e.date+"T00:00:00");return x.getFullYear()===y&&x.getMonth()===m});
+  }else{
+    const y=new Date(entries[entries.length-1].date+"T00:00:00").getFullYear();
+    data=data.filter(e=>new Date(e.date+"T00:00:00").getFullYear()===y);
+  }
+  document.getElementById("periodInfo").textContent=`แสดง ${data.length} รายการ`;
+  const ctx=canvas.getContext("2d");
+  const gradient=ctx.createLinearGradient(0,0,0,340);
+  gradient.addColorStop(0,"rgba(31,191,163,0.35)");
+  gradient.addColorStop(1,"rgba(31,191,163,0)");
+  chart=new Chart(canvas,{type:"line",data:{labels:data.map(e=>formatDate(e.date)),datasets:[{
+    label:"น้ําหนักลูก (กก.)",data:data.map(e=>e.baby),tension:.35,fill:true,
+    borderColor:"#1FBFA3",backgroundColor:gradient,borderWidth:3,
+    pointBackgroundColor:"#1FBFA3",pointBorderColor:"#fff",pointBorderWidth:2,
+    pointRadius:4,pointHoverRadius:6
+  }]},options:{responsive:true,maintainAspectRatio:false,devicePixelRatio:3,
+    plugins:{legend:{display:false}},
+    scales:{
+      y:{title:{display:true,text:"กิโลกรัม"},grid:{color:"#EAE7F7"},ticks:{color:"#767B9E"}},
+      x:{grid:{display:false},ticks:{color:"#767B9E"}}
+    }}});
+}
+/* ---------- Backup ---------- */
+function exportData(){
+  const blob=new Blob([JSON.stringify(appData,null,2)],{type:"application/json"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="baby-weight-backup.json";a.click();URL.revokeObjectURL(a.href);
+}
+function importData(ev){
+  const file=ev.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      if(Array.isArray(d)){
+        entries=d.filter(x=>x.date&&isFinite(x.mother)&&isFinite(x.combined))
+          .map(x=>({...x,baby:+(x.combined-x.mother).toFixed(2),id:x.id||Date.now()+Math.random(),note:x.note||""}));
+        entries.sort((a,b)=>a.date.localeCompare(b.date));
+        persistEntries();
+      }else if(d&&d.child&&Array.isArray(d.entries)){
+        appData=d;if(!appData.child.birthTime)appData.child.birthTime="";
+        if(!Array.isArray(appData.vaccines))appData.vaccines=[];
+        saveApp();entries=appData.entries;vaccineDoses=appData.vaccines;loadChildProfileForm();
+      }else if(d&&Array.isArray(d.children)){
+        const c=d.children[0]||{name:"ลูก",dob:"",sex:""};
+        appData={child:{name:c.name||"ลูก",dob:c.dob||"",sex:c.sex||"",birthTime:c.birthTime||""},entries:(d.entries&&d.entries[c.id])||[],vaccines:[]};
+        saveApp();entries=appData.entries;vaccineDoses=appData.vaccines;loadChildProfileForm();
+      }else throw Error();
+      render();
+      alert("นําเข้าข้อมูลเรียบร้อย");
+    }catch(e){alert("ไฟล์ข้อมูลไม่ถูกต้อง")}
+  };
+  r.readAsText(file);ev.target.value="";
+}
+/* ---------- Print ---------- */
+window.addEventListener("beforeprint",()=>{if(chart)chart.resize()});
+window.addEventListener("afterprint",()=>{if(chart)chart.resize()});
+/* ---------- Init ---------- */
+populateTimeSelects();
+populateVaxSelect();
+document.getElementById("vaxDate").value=today();
+loadChildProfileForm();
+render();
+if(!appData.child.dob&&entries.length===0){document.getElementById("profileDetails").open=true}
+/* ---------- PWA: install + offline ---------- */
+let deferredInstallPrompt=null;
+window.addEventListener("beforeinstallprompt",(e)=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  if(!localStorage.getItem("installBannerDismissed")){
+    document.getElementById("installBanner").style.display="flex";
+  }
+});
+function promptInstall(){
+  document.getElementById("installBanner").style.display="none";
+  if(!deferredInstallPrompt)return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.finally(()=>{deferredInstallPrompt=null});
+}
+function dismissInstallBanner(){
+  document.getElementById("installBanner").style.display="none";
+  localStorage.setItem("installBannerDismissed","1");
+}
+window.addEventListener("appinstalled",()=>{
+  document.getElementById("installBanner").style.display="none";
+});
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>{
+    navigator.serviceWorker.register("sw.js").catch((err)=>{
+      console.warn("Service worker registration failed:",err);
+    });
+  });
+}
+</script>
+</body>
+</html>
